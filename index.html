@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SenMarket - Marketplace Stripe Ready</title>
+<title>SenMarket - Marketplace PRO</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
@@ -14,9 +14,9 @@ nav a{color:white;margin-left:20px;text-decoration:none}
 nav a:hover{color:#00ff88}
 section{padding:120px 10%}
 .section-title{text-align:center;margin-bottom:50px;color:#00ff88}
-.hero{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,#000,#003d22)}
+.hero{height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,#000,#003d22)}
 .hero h2{font-size:3rem;margin-bottom:20px}
-.btn{background:#00ff88;color:black;padding:12px 30px;border-radius:50px;text-decoration:none;font-weight:600;transition:0.3s}
+.btn{background:#00ff88;color:black;padding:12px 30px;border-radius:50px;text-decoration:none;font-weight:600;transition:0.3s;cursor:pointer}
 .btn:hover{background:white;transform:scale(1.05)}
 .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px}
 .product-card{background:#111;padding:20px;border-radius:15px;border:1px solid #00ff88;text-align:center;transition:0.3s;position:relative}
@@ -33,6 +33,7 @@ form button{width:fit-content;}
 .cart-item{display:flex;justify-content:space-between;margin-bottom:8px}
 .cart-item button{padding:2px 6px;border-radius:5px;font-size:0.8rem}
 #dashboardSales div{border-bottom:1px solid #00ff88;padding:5px 0;}
+.hidden{display:none;}
 @media(max-width:768px){.hero h2{font-size:2rem} header{flex-direction:column} nav{margin-top:10px} #cartDetails{width:90%}}
 </style>
 </head>
@@ -41,19 +42,19 @@ form button{width:fit-content;}
 <header>
 <h1>SenMarket</h1>
 <nav>
-<a href="#home">Accueil</a>
-<a href="#shop">Boutique</a>
-<a href="#vendor">Vendeur</a>
-<a href="#login">Login</a>
-<a href="#contact">Contact</a>
-<a href="#dashboard">Dashboard</a>
+<a href="#home" class="nav-link">Accueil</a>
+<a href="#shop" class="nav-link">Boutique</a>
+<a href="#vendor" class="nav-link">Vendeur</a>
+<a href="#dashboard" class="nav-link">Dashboard</a>
+<a href="#contact" class="nav-link">Contact</a>
 </nav>
 </header>
 
+<!-- Sections principales -->
 <section class="hero" id="home">
 <h2>Marketplace Africaine Moderne</h2>
 <p>Vendez et achetez partout facilement</p>
-<a href="#login" class="btn">Se connecter / S'inscrire</a>
+<button class="btn" id="startBtn">Démarrer</button>
 </section>
 
 <section id="shop">
@@ -66,13 +67,29 @@ form button{width:fit-content;}
 <form id="productForm">
 <input type="text" id="productName" placeholder="Nom du produit" required>
 <input type="number" id="productPrice" placeholder="Prix (€)" required>
-<input type="text" id="productPriceId" placeholder="Stripe Price ID (optionnel)" >
+<input type="text" id="productPriceId" placeholder="Stripe Price ID (optionnel)">
 <button type="submit">Ajouter Produit</button>
 </form>
 <div id="vendorProducts"></div>
 </section>
 
-<section id="login">
+<section id="dashboard">
+<h2 class="section-title">Tableau de bord vendeur</h2>
+<div id="dashboardSales"></div>
+</section>
+
+<section id="contact">
+<h2 class="section-title">Contact</h2>
+<form action="https://formsubmit.co/tonemail@gmail.com" method="POST">
+<input type="text" name="name" placeholder="Votre nom" required>
+<input type="email" name="email" placeholder="Votre email" required>
+<textarea name="message" rows="5" placeholder="Votre message" required></textarea>
+<button type="submit">Envoyer</button>
+</form>
+</section>
+
+<!-- Formulaire login -->
+<section id="login" class="hidden">
 <h2 class="section-title">Connexion / Inscription</h2>
 <form id="authForm">
 <input type="text" id="username" placeholder="Nom d'utilisateur" required>
@@ -83,21 +100,7 @@ form button{width:fit-content;}
 <p id="welcomeMsg"></p>
 </section>
 
-<section id="dashboard">
-<h2 class="section-title">Tableau de bord vendeur</h2>
-<div id="dashboardSales"></div>
-</section>
-
-<section id="contact">
-<h2 class="section-title">Contact</h2>
-<form action="https://formsubmit.co/samhane1105@gmail.com" method="POST">
-<input type="text" name="name" placeholder="Votre nom" required>
-<input type="email" name="email" placeholder="Votre email" required>
-<textarea name="message" rows="5" placeholder="Votre message" required></textarea>
-<button type="submit">Envoyer</button>
-</form>
-</section>
-
+<!-- Panier -->
 <div class="cart" id="cart">Panier: 0€ (0)</div>
 <div id="cartDetails">
 <h3>Panier</h3>
@@ -110,9 +113,54 @@ form button{width:fit-content;}
 
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-const stripe = Stripe("pk_test_51T7O5dH5Wo6jiQ2FN1XYY074jC4Kv3o0sZ0Dhg3fJoHPVDRj07e9m4kfvCDjXrz9U9PBTxjHJzdeF59OzJsCsv8Q004LDNVKR8"); // remplace par ta clé publique Stripe
+// === Stripe setup ===
+const stripe = Stripe("pk_test_TA_CLE_PUBLIQUE");
 
-// Panier
+// === Sections et login ===
+const authForm = document.getElementById("authForm");
+const welcomeMsg = document.getElementById("welcomeMsg");
+const loginSection = document.getElementById("login");
+const mainSections = ["home","shop","vendor","dashboard","contact"].map(id=>document.getElementById(id));
+
+function showMainSections(){
+mainSections.forEach(sec=>sec.classList.remove("hidden"));
+loginSection.classList.add("hidden");
+}
+function hideMainSections(){
+mainSections.forEach(sec=>sec.classList.add("hidden"));
+loginSection.classList.remove("hidden");
+}
+
+// Vérifier si user déjà connecté
+const user = localStorage.getItem("user");
+if(user){
+welcomeMsg.textContent = `Bienvenue, ${user} !`;
+showMainSections();
+} else {
+hideMainSections();
+}
+
+// Login / inscription
+authForm.addEventListener("submit", e=>{
+e.preventDefault();
+const username = document.getElementById("username").value;
+localStorage.setItem("user",username);
+welcomeMsg.textContent = `Bienvenue, ${username} !`;
+showMainSections();
+});
+
+// Bouton Démarrer
+document.getElementById("startBtn").addEventListener("click",()=>{
+if(!localStorage.getItem("user")){
+hideMainSections(); // affiche login si pas connecté
+window.location.href="#login";
+} else {
+showMainSections();
+window.location.href="#home";
+}
+});
+
+// === Panier ===
 let cart=[];
 const cartDiv=document.getElementById("cart");
 const cartDetails=document.getElementById("cartDetails");
@@ -134,23 +182,15 @@ cartItemsDiv.appendChild(div);
 cartTotalP.textContent=`Total: ${total}€`;
 cartDiv.textContent=`Panier: ${total}€ (${cart.length})`;
 }
+function addToCart(product){ cart.push(product); updateCartDisplay();}
+function removeFromCart(index){ cart.splice(index,1); updateCartDisplay();}
 
-function addToCart(product){
-cart.push(product);
-updateCartDisplay();
-}
-function removeFromCart(index){
-cart.splice(index,1);
-updateCartDisplay();
-}
-
-// Produits dynamiques
+// === Produits ===
 let products=[
 {name:"Produit 1",price:25,img:"https://via.placeholder.com/300",priceId:"price_xxxxx1"},
 {name:"Produit 2",price:40,img:"https://via.placeholder.com/300",priceId:"price_xxxxx2"},
 {name:"Produit 3",price:60,img:"https://via.placeholder.com/300",priceId:"price_xxxxx3"}
 ];
-
 const container=document.getElementById("productsContainer");
 function renderProducts(){
 container.innerHTML="";
@@ -179,25 +219,9 @@ products.push(product);
 renderProducts();
 });
 
-// Login / Inscription
-const authForm=document.getElementById("authForm");
-const welcomeMsg=document.getElementById("welcomeMsg");
-authForm.addEventListener("submit",function(e){
-e.preventDefault();
-const username=document.getElementById("username").value;
-welcomeMsg.textContent=`Bienvenue, ${username} !`;
-localStorage.setItem("user",username);
-});
-const user=localStorage.getItem("user");
-if(user) welcomeMsg.textContent=`Bienvenue, ${user} !`;
-
-// Dashboard vendeur
+// === Dashboard vendeur ===
 let sales=JSON.parse(localStorage.getItem("sales"))||[];
-function recordSale(product){
-sales.push({...product,date:new Date().toLocaleString()});
-localStorage.setItem("sales",JSON.stringify(sales));
-renderSales();
-}
+function recordSale(product){ sales.push({...product,date:new Date().toLocaleString()}); localStorage.setItem("sales",JSON.stringify(sales)); renderSales();}
 function renderSales(){
 const container=document.getElementById("dashboardSales");
 container.innerHTML="";
@@ -209,7 +233,7 @@ container.appendChild(div);
 }
 renderSales();
 
-// Stripe Checkout produit
+// === Stripe ===
 function initStripeButtons(){
 document.querySelectorAll(".payBtn").forEach(btn=>{
 btn.addEventListener("click",()=>{
@@ -230,7 +254,7 @@ cancelUrl:window.location.href+"?canceled=true"
 }
 initStripeButtons();
 
-// Stripe Checkout panier complet
+// Payer tout le panier
 document.getElementById("checkoutCart").addEventListener("click",()=>{
 if(cart.length===0){alert("Panier vide !"); return;}
 const lineItems=[];
